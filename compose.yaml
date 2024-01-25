@@ -1,0 +1,16 @@
+x-common-config:
+  &common-config
+  privileged: true
+  network_mode: host
+  restart: always
+  ipc: host
+  tty: true
+  environment:
+    - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+
+services:
+  panda_test:
+    build: .
+    container_name: panda_test
+    <<: *common-config
+    command: 
