@@ -1,0 +1,5 @@
+.devcontainer/src
+.devcontainer/build
+.devcontainer/install
+.devcontainer/log
+vcs_repos

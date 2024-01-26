@@ -1,0 +1,31 @@
+{
+    "dockerComposeFile": [
+        "compose.yaml"
+    ],
+    "initializeCommand": "xhost +local:docker",
+    "service": "geppetto_devcontainer",
+    "workspaceFolder": "/home/geppetto/ros2_ws/src",
+    "shutdownAction": "stopCompose",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "bash"
+                    }
+                },
+                "terminal.integrated.defaultProfile.linux": "bash"
+            },
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-python.python",
+                "ms-python.black-formatter",
+                "ajshort.msg",
+                "twxs.cmake",
+                "redhat.vscode-xml",
+                "actboy168.tasks",
+                "brpaz.file-templates"
+            ]
+        }
+    }
+}
