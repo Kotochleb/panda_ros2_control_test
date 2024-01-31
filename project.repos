@@ -1,5 +1,5 @@
 repositories:
   vcs_repos/panda_ros2:
     type: git
-    url: https://github.com/tenfoldpaper/panda_ros2.git
+    url: https://github.com/kotochleb/panda_ros2.git
     version: humble
