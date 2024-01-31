@@ -1,0 +1,9 @@
+<library path="lib/libgravity_compensation_controller">
+    <class name="gravity_compensation_controller/GravityCompensationController" 
+           type="gravity_compensation_controller::GravityCompensationController" 
+           base_class_type="controller_interface::ControllerBase">
+      <description>
+        Gravity compenstation test controller.
+      </description>
+    </class>
+  </library>

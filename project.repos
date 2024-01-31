@@ -1,5 +1,5 @@
 repositories:
-  vcs_repos/panda_ros2:
+  vcs_repos/franka_ros:
     type: git
-    url: https://github.com/tenfoldpaper/panda_ros2.git
-    version: humble
+    url: https://github.com/frankaemika/franka_ros
+    version: develop

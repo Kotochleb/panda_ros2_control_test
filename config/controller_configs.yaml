@@ -1,0 +1,27 @@
+gravity_controller:
+    type: gravity_compensation_controller/GravityCompensationController
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+    kp_gains:
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+    kd_gains:
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+        - 0.001
+    alpha: 0.0

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sim" default="false" />
+
+    <rosparam command="load" file="$(find gravity_compensation_controller)/config/controller_configs.yaml"
+        subst_value="true" />
+
+    <group if="$(arg sim)">
+        <include file="$(find franka_gazebo)/launch/panda.launch">
+            <arg name="arm_id" value="panda" />
+        </include>
+    </group>
+    <group unless="$(arg sim)">
+        <include file="$(find franka_control)/launch/franka_control.launch">
+            <arg name="arm_id" value="panda" />
+            <arg name="load_gripper" value="true" />
+        </include>
+    </group>
+
+    <!-- spawns the controller after "initialized" topic tells us the robot is initialized  -->
+    <node pkg="controller_manager"
+        type="spawner"
+        name="panda_gravity_controller_spawner"
+        respawn="true" output="screen"
+        args="--wait-for initialized gravity_controller"
+    />
+</launch>
