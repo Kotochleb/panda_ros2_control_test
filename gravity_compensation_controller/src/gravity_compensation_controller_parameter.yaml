@@ -1,0 +1,21 @@
+gravity_compensation_controller:
+    joint_names: {
+      type: string_array,
+      default_value: [],
+      description: "Link names of the joints",
+    }
+    kp_gains: {
+      type: double_array,
+      default_value: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      description: "Proportional gains for the controller.",
+    }
+    kd_gains: {
+      type: double_array,
+      default_value: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      description: "Derivative gains for the controller.",
+    }
+    torque_limits: {
+      type: double_array,
+      default_value: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      description: "Absolute velues of torque to be applied to joints.",
+    }
