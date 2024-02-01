@@ -1,5 +1,6 @@
 #include "gravity_compensation_controller/gravity_compensation_controller.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -40,17 +41,18 @@ namespace gravity_compensation_controller
 
     InterfaceConfiguration GravityCompensationController::command_interface_configuration() const
     {
-        std::vector<std::string> conf_names(params_.joint_names.size());
+        std::vector<std::string> conf_names;
         for (const auto &joint_name : params_.joint_names)
         {
-            conf_names.push_back(joint_name + "/" + HW_IF_EFFORT);
+            // conf_names.push_back(joint_name + "/" + HW_IF_EFFORT);
+            conf_names.push_back(joint_name + "/" + HW_IF_VELOCITY);
         }
         return {interface_configuration_type::INDIVIDUAL, conf_names};
     }
 
     InterfaceConfiguration GravityCompensationController::state_interface_configuration() const
     {
-        std::vector<std::string> conf_names(2 * params_.joint_names.size());
+        std::vector<std::string> conf_names;
         for (const auto &joint_name : params_.joint_names)
         {
             conf_names.push_back(joint_name + "/" + HW_IF_POSITION);
@@ -68,15 +70,16 @@ namespace gravity_compensation_controller
         auto logger = get_node()->get_logger();
         const std::size_t n_joints = params_.joint_names.size();
 
-        if (pose_initialized_)
+        if (!pose_initialized_)
         {
-            std::vector<double> initial_state;
+            std::vector<double> initial_state(n_joints);
             for (std::size_t i = 0; i < n_joints; i++)
             {
-                initial_state[i] = state_interfaces_[0].get_value();
+                initial_state[i] = state_interfaces_[i].get_value();
             }
             received_trajectory_.set(initial_state);
-            pose_initialized_ = false;
+            pose_initialized_ = true;
+            RCLCPP_INFO(logger, "First pose was initialized");
         }
 
         std::vector<double> last_command_msg(n_joints);
@@ -84,13 +87,17 @@ namespace gravity_compensation_controller
 
         for (std::size_t i = 0; i < n_joints; i++)
         {
-            const double kp = params_.kp_gains[i] * state_interfaces_[i].get_value();
-            const double kd = params_.kd_gains[i] * state_interfaces_[i + n_joints].get_value();
-            const double tau_d = kp + kd * period.seconds();
+            const double kp = params_.kp_gains[i] * (last_command_msg[i] - state_interfaces_[i].get_value());
+            const double kd = -params_.kd_gains[i] * state_interfaces_[i + n_joints].get_value();
+            const double tau_d = (kp + kd) / period.seconds();
             const double lim = params_.torque_limits[i];
-            const double tau_d_clamped = std::max(-lim, std::min(tau_d, lim));
-            command_interfaces_[i].set_value(tau_d_clamped);
+            command_interfaces_[i].set_value(std::clamp(tau_d, -lim, lim));
         }
+        // for (const auto &ci : command_interfaces_)
+        // {
+        //     std::cout << ci.get_value() << std::endl;
+        // }
+        // std::cout << std::endl;
 
         return controller_interface::return_type::OK;
     }
@@ -154,6 +161,7 @@ namespace gravity_compensation_controller
         const rclcpp_lifecycle::State &)
     {
         subscriber_is_active_ = true;
+        pose_initialized_ = false;
         RCLCPP_INFO(get_node()->get_logger(), "Subscriber is now active.");
         return controller_interface::CallbackReturn::SUCCESS;
     }

@@ -17,14 +17,17 @@
                 "terminal.integrated.defaultProfile.linux": "bash"
             },
             "extensions": [
-                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
                 "ms-python.python",
                 "ms-python.black-formatter",
-                "ajshort.msg",
-                "twxs.cmake",
+                "ms-python.isort",
+                "ms-toolsai.jupyter",
+                "ms-iot.vscode-ros",
+                "redhat.vscode-yaml",
                 "redhat.vscode-xml",
-                "actboy168.tasks",
-                "brpaz.file-templates"
+                "twxs.cmake",
+                "ajshort.msg",
+                "xaver.clang-format"
             ]
         }
     }

@@ -8,6 +8,7 @@
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
   <build_depend>generate_parameter_library</build_depend>
 
   <depend>controller_interface</depend>
@@ -15,9 +16,11 @@
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
+  <depend>rclpy</depend>
   <depend>rcpputils</depend>
   <depend>realtime_tools</depend>
   <depend>urdf</depend>
+  <depend>trajectory_msgs</depend>
 
   <exec_depend>franka_description</exec_depend>
   <exec_depend>franka_bringup</exec_depend>

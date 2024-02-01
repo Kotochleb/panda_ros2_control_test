@@ -17,6 +17,9 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 )
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclpy REQUIRED)
+
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -40,6 +43,18 @@ ament_target_dependencies(gravity_compensation_controller PUBLIC ${THIS_PACKAGE_
 target_compile_definitions(gravity_compensation_controller PRIVATE "gravity_compensation_controller_BUILDING_DLL")
 pluginlib_export_plugin_description_file(controller_interface gravity_compensation_controller_plugins.xml)
 
+ament_python_install_package(${PROJECT_NAME})
+
+# Install Python executables
+install(PROGRAMS
+  gravity_compensation_controller/trajecotry_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY config launch
+  DESTINATION share/${PROJECT_NAME}
+)
 install(
   DIRECTORY include/
   DESTINATION include/gravity_compensation_controller

@@ -80,10 +80,16 @@
     "*.ipp": "cpp"
   },
   "python.analysis.extraPaths": [
-    "/opt/ros/humble/lib/python3.10/site-packages/"
+    "/opt/ros/humble/lib/python3.10/site-packages",
+    "/opt/ros/humble/local/python3.10/site-packages",
+    "/opt/ros/humble/local/lib/python3.10/dist-packages/",
+    "${workspaceFolder}/**",
   ],
   "python.autoComplete.extraPaths": [
-    "/opt/ros/humble/lib/python3.10/site-packages/"
+    "/opt/ros/humble/lib/python3.10/site-packages",
+    "/opt/ros/humble/local/python3.10/site-packages",
+    "/opt/ros/humble/local/lib/python3.10/dist-packages/",
+    "${workspaceFolder}/**",
   ],
   "python.envFile": "${workspaceFolder}/.env",
   "search.exclude": {
@@ -91,7 +97,9 @@
     "**/bower_components": true,
     "**/*.code-search": true,
     "**/build": true,
-    "**/install": true,
+    // "**/install": true,
     "**/log": true
   },
+  "ros.distro": "humble",
+  "cmake.configureOnOpen": false,
 }
