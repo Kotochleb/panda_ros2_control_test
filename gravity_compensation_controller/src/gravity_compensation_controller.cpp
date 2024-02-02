@@ -44,8 +44,8 @@ namespace gravity_compensation_controller
         std::vector<std::string> conf_names;
         for (const auto &joint_name : params_.joint_names)
         {
-            // conf_names.push_back(joint_name + "/" + HW_IF_EFFORT);
-            conf_names.push_back(joint_name + "/" + HW_IF_VELOCITY);
+            conf_names.push_back(joint_name + "/" + HW_IF_EFFORT);
+            // conf_names.push_back(joint_name + "/" + HW_IF_VELOCITY);
         }
         return {interface_configuration_type::INDIVIDUAL, conf_names};
     }
@@ -65,7 +65,7 @@ namespace gravity_compensation_controller
     }
 
     controller_interface::return_type GravityCompensationController::update(
-        const rclcpp::Time &, const rclcpp::Duration &period)
+        const rclcpp::Time &, const rclcpp::Duration &)
     {
         auto logger = get_node()->get_logger();
         const std::size_t n_joints = params_.joint_names.size();
@@ -89,8 +89,12 @@ namespace gravity_compensation_controller
         {
             const double kp = params_.kp_gains[i] * (last_command_msg[i] - state_interfaces_[i].get_value());
             const double kd = -params_.kd_gains[i] * state_interfaces_[i + n_joints].get_value();
-            const double tau_d = (kp + kd) / period.seconds();
             const double lim = params_.torque_limits[i];
+            double tau_d = (kp + kd) * 1000.0;
+            if (std::isnan(tau_d))
+            {
+                tau_d = 0.0;
+            }
             command_interfaces_[i].set_value(std::clamp(tau_d, -lim, lim));
         }
         // for (const auto &ci : command_interfaces_)
