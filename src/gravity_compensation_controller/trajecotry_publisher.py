@@ -41,6 +41,7 @@ class TrajectoryPublisher:
         jt.points = [
             JointTrajectoryPoint(positions=[j]) for j in next(self._goal_cycle)
         ]
+        rospy.loginfo(f"[{rospy.get_name()}] New pose published")
         self._trajectory_pub.publish(jt)
 
 

@@ -1,6 +1,7 @@
 #ifndef GRAVITY_COMPENSATION_CONTROLLER_HPP
 #define GRAVITY_COMPENSATION_CONTROLLER_HPP
 
+#include <array>
 #include <memory>
 #include <string>
 
@@ -44,9 +45,6 @@ namespace gravity_compensation_controller
     private:
         void joint_trajectory_cb(const trajectory_msgs::JointTrajectory& jt);
 
-        using Vector7d = Eigen::Matrix<double, 7, 1>;
-        using Matrix7d = Eigen::Matrix<double, 7, 7>;
-        using Vector9d = Eigen::Matrix<double, 9, 1>;
         std::string name_;
         pinocchio::Model model_;
         pinocchio::Data data_;
@@ -55,14 +53,15 @@ namespace gravity_compensation_controller
         std::unique_ptr<franka_hw::FrankaModelHandle> model_handle_;
         std::vector<hardware_interface::JointHandle> joint_handles_;
 
-        Vector7d kp_gains_;
-        Vector7d kd_gains_;
-        Vector7d target_pose_;
+        std::array<double, 7> kp_gains_;
+        std::array<double, 7> kd_gains_;
+        std::array<double, 7> target_pose_;
+        std::array<double, 7> torque_limits_;
         double alpha_;
 
         ros::Time last_time_;
         ros::Subscriber trajectory_sub_;
-        realtime_tools::RealtimeBuffer<Vector7d> command_;
+        realtime_tools::RealtimeBuffer<std::array<double, 7>> command_;
 
         const std::string kControllerName = "GravityCompensationController";
         static constexpr unsigned int kNumJoints_ = 7;

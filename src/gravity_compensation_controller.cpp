@@ -22,8 +22,6 @@
 
 #include <trajectory_msgs/JointTrajectory.h>
 
-#include <iostream>
-
 namespace gravity_compensation_controller
 {
 
@@ -74,7 +72,7 @@ namespace gravity_compensation_controller
             ROS_ERROR("GravityCompensationController: Number of KD gains does not match number ot joints!");
             return false;
         }
-        kp_gains_ = Eigen::Map<Vector7d>(kp_gains_vect.data());
+        std::copy_n(kp_gains_vect.begin(), kNumJoints_, kp_gains_.begin());
 
         std::vector<double> kd_gains_vect;
         if (!controller_nh.getParam("kd_gains", kd_gains_vect))
@@ -87,7 +85,21 @@ namespace gravity_compensation_controller
             ROS_ERROR("GravityCompensationController: Number of KD gains does not match number ot joints!");
             return false;
         }
-        kd_gains_ = Eigen::Map<Vector7d>(kd_gains_vect.data());
+        std::copy_n(kd_gains_vect.begin(), kNumJoints_, kd_gains_.begin());
+
+
+        std::vector<double> torque_limits_vect;
+        if (!controller_nh.getParam("torque_limits", torque_limits_vect))
+        {
+            ROS_ERROR("GravityCompensationController: Parameter 'torque_limits' not set");
+            return false;
+        }
+        if (kd_gains_vect.size() != kNumJoints_)
+        {
+            ROS_ERROR("GravityCompensationController: Number of torque limits does not match number ot joints!");
+            return false;
+        }
+        std::copy_n(torque_limits_vect.begin(), kNumJoints_, torque_limits_.begin());
 
         auto model_interface = robot_hw->get<franka_hw::FrankaModelInterface>();
         if (model_interface == nullptr)
@@ -146,12 +158,11 @@ namespace gravity_compensation_controller
 
     void GravityCompensationController::joint_trajectory_cb(const trajectory_msgs::JointTrajectory& jt)
     {
-        Vector7d new_command;
+        std::array<double, 7> new_command;
         for (std::size_t i = 0; i < kNumJoints_; i++)
         {
             new_command[i] = jt.points[i].positions[0];
         }
-        std::cout << new_command << std::endl;
         command_.writeFromNonRT(new_command);
     }
 
@@ -159,7 +170,7 @@ namespace gravity_compensation_controller
     {
         last_time_ = time;
         franka::RobotState state = state_handle_->getRobotState();
-        command_.writeFromNonRT(Eigen::Map<Vector7d>(state.q.data()));
+        command_.writeFromNonRT(state.q);
         ROS_INFO_NAMED(kControllerName, "Controller Started!");
     }
 
@@ -169,22 +180,21 @@ namespace gravity_compensation_controller
         last_time_ = time;
 
         franka::RobotState state = state_handle_->getRobotState();
-        const Eigen::Map<Vector7d> q(state.q.data());
-
-        const Vector7d target_pose_ = *(command_.readFromRT());
-
-        const Vector7d error_q = target_pose_ - q;
-
-        const Eigen::Map<Vector7d> dq(state.dq.data());
-        const Vector7d error_dq = -dq;
-
-        Vector7d tau_d;
-        tau_d << kp_gains_.cwiseProduct(error_q) / dt +
-                     kd_gains_.cwiseProduct(error_dq) / dt;
+        const std::array<double, 7> &state_pos = state.q;
+        const std::array<double, 7> &state_vel = state.dq;
+        const std::array<double, 7> target_pose = *(command_.readFromRT());
 
         for (std::size_t i = 0; i < kNumJoints_; i++)
         {
-            joint_handles_[i].setCommand(tau_d(i));
+            const double kp = kp_gains_[i] * (target_pose[i] - state_pos[i]);
+            const double kd = -kd_gains_[i] * state_vel[i];
+            const double lim = torque_limits_[i];
+            double tau_d = (kp + kd) * 1000.0;
+            if (std::isnan(tau_d))
+            {
+                tau_d = 0.0;
+            }
+            joint_handles_[i].setCommand(std::clamp(tau_d, -lim, lim));
         }
     }
 }
