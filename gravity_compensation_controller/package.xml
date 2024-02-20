@@ -10,6 +10,8 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
   <build_depend>generate_parameter_library</build_depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>pinocchio</build_depend>
 
   <depend>controller_interface</depend>
   <depend>hardware_interface</depend>

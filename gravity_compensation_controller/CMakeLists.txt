@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 project(gravity_compensation_controller LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
@@ -19,6 +19,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(pinocchio REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -36,7 +38,11 @@ target_include_directories(gravity_compensation_controller PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/gravity_compensation_controller>
 )
-target_link_libraries(gravity_compensation_controller PUBLIC gravity_compensation_controller_parameters)
+target_link_libraries(gravity_compensation_controller PUBLIC gravity_compensation_controller_parameters
+  Eigen3::Eigen
+  pinocchio::pinocchio
+  pinocchio::pinocchio_headers
+)
 ament_target_dependencies(gravity_compensation_controller PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

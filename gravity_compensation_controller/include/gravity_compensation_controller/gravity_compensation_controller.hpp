@@ -4,6 +4,9 @@
 #include <memory>
 #include <vector>
 
+#include <pinocchio/multibody/data.hpp>
+#include <pinocchio/multibody/model.hpp>
+
 #include "gravity_compensation_controller/visibility_control.h"
 
 #include "controller_interface/controller_interface.hpp"
@@ -12,6 +15,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+
+#include "std_msgs/msg/string.hpp"
 
 #include "realtime_tools/realtime_box.h"
 
@@ -23,6 +28,7 @@ namespace gravity_compensation_controller
     class GravityCompensationController : public controller_interface::ControllerInterface
     {
         using JointTrajectory = trajectory_msgs::msg::JointTrajectory;
+        using String = std_msgs::msg::String;
 
     public:
         GRAVITY_COMPENSATION_CONTROLLER_PUBLIC
@@ -66,15 +72,22 @@ namespace gravity_compensation_controller
             const rclcpp_lifecycle::State &previous_state) override;
 
     protected:
+        using Vector7d = Eigen::Matrix<double, 7, 1>;
         // Parameters from ROS for gravity_compensation_controller
         std::shared_ptr<ParamListener> param_listener_;
         Params params_;
 
         bool pose_initialized_ = false;
 
+        pinocchio::Model model_;
+        pinocchio::Data data_;
+
+        bool pin_init_ = false;
         bool subscriber_is_active_ = false;
         rclcpp::Subscription<JointTrajectory>::SharedPtr joint_trajectory_sub_ = nullptr;
+        rclcpp::Subscription<String>::SharedPtr robot_description_sub_ = nullptr;
         realtime_tools::RealtimeBox<std::vector<double>> received_trajectory_;
+        realtime_tools::RealtimeBox<std::string> robot_description_;
     };
 } // namespace gravity_compensation_controller
 #endif // GRAVITY_COMPENSATION_CONTROLLER__GRAVITY_COMPENSATION_CONTROLLER_HPP_

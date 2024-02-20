@@ -10,8 +10,20 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 #include "rclcpp/logging.hpp"
+#include "rclcpp/wait_for_message.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "std_msgs/msg/string.hpp"
 
+#include <urdf_parser/urdf_parser.h>
+
+#include <pinocchio/algorithm/rnea.hpp>
+#include <pinocchio/multibody/data.hpp>
+#include <pinocchio/multibody/model.hpp>
+#include <pinocchio/parsers/urdf.hpp>
+#include "pinocchio/algorithm/model.hpp"
+#include "pinocchio/algorithm/joint-configuration.hpp"
+
+#include <iostream>
 namespace gravity_compensation_controller
 {
     using controller_interface::interface_configuration_type;
@@ -61,6 +73,10 @@ namespace gravity_compensation_controller
         {
             conf_names.push_back(joint_name + "/" + HW_IF_VELOCITY);
         }
+        for (const auto &joint_name : params_.joint_names)
+        {
+            conf_names.push_back(joint_name + "/" + HW_IF_EFFORT);
+        }
         return {interface_configuration_type::INDIVIDUAL, conf_names};
     }
 
@@ -69,6 +85,28 @@ namespace gravity_compensation_controller
     {
         auto logger = get_node()->get_logger();
         const std::size_t n_joints = params_.joint_names.size();
+
+        if (!pin_init_)
+        {
+            std::string rd;
+            robot_description_.get(rd);
+            if (rd != "")
+            {
+                pinocchio::Model model_full;
+                const auto urdf_tree = urdf::parseURDF(rd);
+                pinocchio::urdf::buildModel(urdf_tree, model_full);
+
+                const auto q0 = pinocchio::neutral(model_full);
+                std::vector<unsigned long> locked_joints_id{
+                    model_full.getJointId("panda_finger_joint1"),
+                    model_full.getJointId("panda_finger_joint2"),
+                };
+                model_ = pinocchio::buildReducedModel(model_full, locked_joints_id, q0);
+                data_ = pinocchio::Data(model_);
+                pin_init_ = true;
+                RCLCPP_INFO(logger, "Pinocchio initialized!");
+            }
+        }
 
         if (!pose_initialized_)
         {
@@ -85,8 +123,24 @@ namespace gravity_compensation_controller
         std::vector<double> last_command_msg(n_joints);
         received_trajectory_.get(last_command_msg);
 
+        Vector7d tau_g;
+        if (pin_init_)
+        {
+            Vector7d q;
+            for (std::size_t i = 0; i < n_joints; i++)
+            {
+                q[i] = state_interfaces_[i].get_value();
+            }
+            tau_g = pinocchio::computeGeneralizedGravity(model_, data_, q);
+        }
+        else
+        {
+            tau_g = Vector7d::Zero();
+        }
+
         for (std::size_t i = 0; i < n_joints; i++)
         {
+            // std::cout << state_interfaces_[i + 2 * n_joints].get_value() << std::endl;
             const double kp = params_.kp_gains[i] * (last_command_msg[i] - state_interfaces_[i].get_value());
             const double kd = -params_.kd_gains[i] * state_interfaces_[i + n_joints].get_value();
             const double lim = params_.torque_limits[i];
@@ -95,7 +149,7 @@ namespace gravity_compensation_controller
             {
                 tau_d = 0.0;
             }
-            command_interfaces_[i].set_value(std::clamp(tau_d, -lim, lim));
+            command_interfaces_[i].set_value(std::clamp(tau_d, -lim, lim) + tau_g[i]);
         }
         // for (const auto &ci : command_interfaces_)
         // {
@@ -158,6 +212,15 @@ namespace gravity_compensation_controller
                 }
                 this->received_trajectory_.set(goal);
             });
+
+        robot_description_.set("");
+        robot_description_sub_ = get_node()->create_subscription<std_msgs::msg::String>(
+            "/robot_description", rclcpp::QoS(1).transient_local(),
+            [this](const std_msgs::msg::String &msg) -> void
+            {
+                this->robot_description_.set(msg.data);
+            });
+
         return controller_interface::CallbackReturn::SUCCESS;
     }
 
