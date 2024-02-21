@@ -214,12 +214,15 @@ namespace gravity_compensation_controller
             });
 
         robot_description_.set("");
-        robot_description_sub_ = get_node()->create_subscription<std_msgs::msg::String>(
-            "/robot_description", rclcpp::QoS(1).transient_local(),
-            [this](const std_msgs::msg::String &msg) -> void
-            {
-                this->robot_description_.set(msg.data);
-            });
+        if (params_.remove_gravity)
+        {
+            robot_description_sub_ = get_node()->create_subscription<std_msgs::msg::String>(
+                "/robot_description", rclcpp::QoS(1).transient_local(),
+                [this](const std_msgs::msg::String &msg) -> void
+                {
+                    this->robot_description_.set(msg.data);
+                });
+        }
 
         return controller_interface::CallbackReturn::SUCCESS;
     }

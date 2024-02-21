@@ -19,3 +19,8 @@ gravity_compensation_controller:
       default_value: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
       description: "Absolute velues of torque to be applied to joints.",
     }
+    remove_gravity: {
+      type: bool,
+      default_value: false,
+      description: "Wether to compensate for the gravity with pinocchio.",
+    }

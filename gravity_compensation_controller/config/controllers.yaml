@@ -50,3 +50,4 @@ gravity_compensation_controller:
       - 2.0
       - 2.0
       - 2.0
+    remove_gravity: false
